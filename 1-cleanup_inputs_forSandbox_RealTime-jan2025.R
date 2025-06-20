@@ -9,9 +9,11 @@ library(here) # reference data locations
 post.days <- 200 # number of days following to end date included
 yr <- 2024
 
-toCk <-  read.csv(here("inputs", "burn severity request_2024-25.csv")) %>%
+#change csv name
+toCk <-  read.csv(here("inputs", "burn severity request_2025Jan_June.csv")) %>%
   dplyr::select(BURNID, start, end, mapText, nSeason, Comment) %>%
-  mutate(start = dmy(start), end = dmy(end))
+  mutate(start = dmy(start), end = dmy(end), 
+         BURNID = str_replace(BURNID, "_", ""))
 
 shp <- st_read("V:\\GIS1-Corporate\\data\\GDB\\Fire\\Burn_data\\CPT_FIRE_ANNUAL_IBP.gdb", 
                layer = "CPT_FIRE_ANNUAL_IBP", quiet = TRUE) %>%
@@ -77,7 +79,7 @@ v <- length(list.files(here("inputs"), pattern = "shp$"))
 shp.albF <- shp.alb %>% mutate(days = floor(difftime( im_end, im_strt, units = "days"))) %>%
   filter(days >= 8 & mapText != "" ) 
 
-shp.albF <- filter(shp.albF, BURNID %in% c("DON147", "DON157", "FRK107", "DON106"))
+#shp.albF <- filter(shp.albF, BURNID %in% c("DON147", "DON157", "FRK107", "DON106"))
 st_write(shp.albF, here("inputs", paste0("operational_", Sys.Date(), "_alb.shp")), append=FALSE)
 
 #####################################################################
@@ -95,7 +97,8 @@ for (i in 1:nrow(shp.alb)){
 
 #################################################################
 # get ibras
-ibra <- st_read(here("models\\IBRA_wa.shp"), quiet = TRUE) 
+dir <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
+ibra <- st_read(here(dir,"IBRA_wa.shp"), quiet = TRUE) 
 dir.create(here::here("models", "ibras"), showWarnings = FALSE)
 library(doParallel)
 i <- 1
@@ -124,6 +127,7 @@ foreach(i = 1:nrow(shp.alb)) %dopar% {
 stopCluster(cl)
 
 #################################################################
+#ONLY RUN when a boundarie needs to be updated 
 ### update shpByBurn
  # 
   shp.new <- st_read(here("inputs", "MOR_057", "Cell 6 Burn.shp"))
