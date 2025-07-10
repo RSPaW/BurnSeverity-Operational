@@ -38,8 +38,8 @@ df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","War
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
 
 
-dates <- read.csv(here::here("inputs", "request_2024-25.csv")) 
-#colnames(dates)[1] <- "BURNID"
+dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
+colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
   mutate(
     BURNID = str_replace(BURNID, "_", ""),
@@ -47,8 +47,8 @@ dates <- dates %>%
     end = as.Date(parse_date_time(end, c("ymd", "dmy")))
   )
 
-
-shp.tmp <- st_read(here("models\\Template_AFED\\Template_AFED.shp"))
+dir2 <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
+shp.tmp <- st_read(here(dir2,"Template_AFED\\Template_AFED.shp"))
 shp.tmp[1,1] <- NA
 
 tlist <- as.data.frame(list.files(here(), pattern = "dNBR.tiff$", recursive = TRUE))
@@ -61,11 +61,11 @@ burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
 
 burns <- unique(tlist$BURNID)
-#
 #burns <- "DON152"
+#burns <- "PHS256"
 
 
-rst.per <- raster(here("models", "perenialVeg", "rem_Woody_veg_2020.tif"))
+rst.per <- raster(here(dir2,"perenialVeg", "rem_Woody_veg_2020.tif"))
 i <- 1
 
 dir.create(here("models", "tmp"), showWarnings = FALSE)
