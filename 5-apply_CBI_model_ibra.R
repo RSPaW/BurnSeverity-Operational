@@ -25,7 +25,8 @@ mtx <- c(-Inf, 0.3, 2,
          2.1, 2.7, 4, 
          2.7, Inf, 5)
 rclmat <- matrix(mtx, ncol=3, byrow=TRUE)
-maxVals <- readRDS(here("models", "maxVals.sentinel"))
+dir2 <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
+maxVals <- readRDS(here(dir2, "maxVals.sentinel"))
 lshp <- list.files(here("inputs\\shpByBurn"), pattern = ".shp$", full.names = TRUE)
 shp <- st_read(lshp[1])
 shp <- shp[0,]
@@ -41,7 +42,7 @@ for (i in 1:length(lshp)){
   shp <- rbind(shp, shp.tmp)
 }
 
-mlist <- as.data.frame(list.files(here("models")), stringsAsFactors = FALSE)
+mlist <- as.data.frame(list.files(here(dir2)), stringsAsFactors = FALSE)
 colnames(mlist) <- "models"
 mlist <- mlist %>% mutate(type = str_split_fixed(models, "\\.", 7)[,1],
                 zone = str_split_fixed(models, "\\.", 7)[,2], 
@@ -55,13 +56,13 @@ heath.list <- sort(list.files("Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\D
                               pattern = "predicted.*.shp$", full.names = TRUE), 
                    decreasing = TRUE)
 
-heath.list2 <- list.files(here("models", "heath"), pattern = "shp$")
+heath.list2 <- list.files(here(dir2, "heath"), pattern = "shp$")
 heath <- st_read(heath.list[1], quiet = TRUE) %>%
   st_transform(crs(shp))
 heath <- heath[,0]
 i <- 1
 for (i in 1:length(heath.list2)){
-  heath.i <- st_read(here("models", "heath", heath.list2[i]), quiet = TRUE) %>%
+  heath.i <- st_read(here(dir2, "heath", heath.list2[i]), quiet = TRUE) %>%
     st_transform(crs(shp))
   heath.i <- heath.i[,0]
   heath <- rbind(heath, heath.i)
@@ -145,7 +146,7 @@ foreach(i = 1:length(burns)) %dopar% {
   
   m <- 1
   #for (m in 1:nrow(ibra.model)){
-    mod <- readRDS(paste0(here("models"), "\\", ibra.model$models[m]))
+    mod <- readRDS(paste0(here(dir2), "\\", ibra.model$models[m]))
     mod.index <- str_split_fixed(ibra.model$models[m], "\\.", 7)[6]
     
     names(rst)[1] <- "index"
