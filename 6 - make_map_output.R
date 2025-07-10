@@ -8,7 +8,7 @@ library(here)
 
 use.heath <- "y"
 
-dates <- read.csv(here::here("inputs", "burn severity request_2024-25.csv")) 
+dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
 #colnames(dates)[1] <- "BURNID"
 dates <- dates %>% mutate(BURNID = str_replace(BURNID, "_", "")) %>%
   mutate(pageNumber = paste0(BURNID, "_", burnName)) %>%
@@ -23,7 +23,8 @@ dates$pageNumber <- str_replace_all(dates$pageNumber, "\\/", "-")
 
 dir.create(here("maps"), showWarnings = FALSE)
 
-shp <- st_read(here("models\\Template_AFED\\Template_AFED.shp"))[0,]
+dir2 <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
+shp <- st_read(here(dir2,"Template_AFED\\Template_AFED.shp"))[0,]
 burnt.shp <- shp #dplyr::select(shp, -BURNID)
 
 
