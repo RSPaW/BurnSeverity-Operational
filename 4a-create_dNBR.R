@@ -10,9 +10,9 @@ lshp <- list.files(here("inputs\\shpByBurn"), pattern = ".shp$", full.names = TR
 
 df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","Warren","Warren"), 
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
-
-dates <- read.csv(here::here("inputs", "burn severity request_2024-25.csv")) 
-#colnames(dates)[1] <- "BURNID"
+#change csv name
+dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
+colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
   mutate(
     BURNID = str_replace(BURNID, "_", ""),
@@ -25,7 +25,7 @@ burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
 burns <- unique(dates$BURNID)
-#burns <- "DON152"
+#burns <- "PHS256"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
@@ -49,13 +49,11 @@ foreach(i = 1:length(burns)) %dopar% {
   
   #fstart <- ymd("2021-09-15")
   fstart <- parse_date_time(date$start[1], c("ymd", "dmy"))
-  if (month(parse_date_time(date$end[1], c("ymd", "dmy"))) %in% c(4:7)){
-    fend <- parse_date_time(date$end[1], c("ymd", "dmy")) + 30
-  }else{
-     fend <- parse_date_time(date$end[1], c("ymd", "dmy"))
-  }
-  
- 
+  # if (month(parse_date_time(date$end[1], c("ymd", "dmy"))) %in% c(4:7)){
+  #   fend <- parse_date_time(date$end[1], c("ymd", "dmy")) + days(30)
+  # }else{
+  #    fend <- parse_date_time(date$end[1], c("ymd", "dmy")) + days(30)
+  # }
   #fend <- ymd("2022-09-15")
   
   region <- df.regions$region[which(df.regions$district == str_sub(burns[i], end = 3))]
@@ -91,10 +89,10 @@ foreach(i = 1:length(burns)) %dopar% {
   plot(preIm10)
   
   #post image nbr
-  postDates <- filter(tlist, date > fstart & date <= fend)
-  postDates.1 <- filter(tlist, date > fend)
-  postDates <- bind_rows( postDates,  postDates.1[1,]) %>%
-    na.omit()
+  postDates <- filter(tlist, date > fstart)# & date <= fend)
+  #postDates.1 <- filter(tlist, date > fend)
+  #postDates <- bind_rows( postDates,  postDates.1[1,]) %>%
+  #  na.omit()
   
   # if (nrow(postDates) == 0){
   #   postDates <- filter(tlist, date > fstart)
@@ -108,8 +106,13 @@ foreach(i = 1:length(burns)) %dopar% {
     ims <- stack(here("tifs", burns[i], postDates$file))
     plot(ims)
     postIm20 <- crop(ims, ply)
-  
-    postNBRmin <- calc(postIm20, min)
+    postIm20[postIm20 == 0] <- NA
+    if (nlayers( postIm20 ) !=1){
+      postNBRmin <- raster::calc(postIm20, min, na.rm = TRUE)
+    }else{
+      postNBRmin <- postIm20
+    }
+    #postNBRmin <- calc(postIm20, min, na.rm = TRUE)
     postNBRmin[postNBRmin == 0] <- NA
     plot(postNBRmin)
  
