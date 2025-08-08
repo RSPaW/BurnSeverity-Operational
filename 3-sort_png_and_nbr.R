@@ -7,16 +7,19 @@ library(parsedate)
 
 unlink(here("tmp2"), recursive = TRUE)
 
-tarfile <- here("s2_rgb_nbr (4).tar.gz")
+tarfile <- here("s2_rgb_nbr (3).tar.gz")
 untar(tarfile, exdir = here("tmp2"))
 
 plst <- list.files(here("tmp2\\home\\jovyan\\fireSeverity\\rgb_nbr"), pattern = ".png$" )
 tlst <- list.files(here("tmp2\\home\\jovyan\\fireSeverity\\rgb_nbr"), pattern = ".tif$" )
 
-dates <- read.csv(here::here("inputs", "request_2024-25.csv")) %>%
+#change csv name
+dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
+colnames(dates)[1] <- "BURNID" 
+  
+
+dates<-   mutate(dates, BURNID = str_replace(BURNID, "_", "")) %>%
   dplyr::select(BURNID, start, end)
-colnames(dates)[1] <- "BURNID"
-dates<-   mutate(dates, BURNID = str_replace(BURNID, "_", ""))
 dates$start <- parse_date_time(dates$start, c("ymd", "dmy"))
 dates$end <- parse_date_time(dates$end, c("ymd", "dmy"))
 
