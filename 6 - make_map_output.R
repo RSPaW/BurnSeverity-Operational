@@ -9,10 +9,14 @@ library(here)
 use.heath <- "y"
 
 dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
-#colnames(dates)[1] <- "BURNID"
+colnames(dates)[1] <- "BURNID"
 dates <- dates %>% mutate(BURNID = str_replace(BURNID, "_", "")) %>%
   mutate(pageNumber = paste0(BURNID, "_", burnName)) %>%
   dplyr::select(BURNID, burnName, pageNumber, mapText)
+
+dates <- mutate(dates, pageNumber = case_when(mapText == "<<DRAFT>>" ~ 
+                                                paste0(pageNumber, "_DRAFT"), 
+                                                       TRUE ~ pageNumber))
 
 dates$pageNumber <- str_replace_all(dates$pageNumber, " ", "")
 dates$pageNumber <- str_replace_all(dates$pageNumber, "\\(", "-")
