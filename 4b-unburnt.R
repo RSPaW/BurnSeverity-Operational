@@ -37,8 +37,8 @@ for (i in 1:length(lshp)){
 df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","Warren","Warren"), 
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
 
-
-dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
+csvs <- list.files(here::here(), pattern = ".csv")
+dates <- read.csv(here::here(csvs)) 
 colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
   mutate(
