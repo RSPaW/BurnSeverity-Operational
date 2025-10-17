@@ -62,7 +62,7 @@ burns <- str_split_fixed(burns.f, "_", 2)[,2]
 
 burns <- unique(tlist$BURNID)
 #burns <- "DON152"
-#burns <- "PHS256"
+burns <- "PHS252"
 
 
 rst.per <- raster(here(dir2,"perenialVeg", "rem_Woody_veg_2020.tif"))

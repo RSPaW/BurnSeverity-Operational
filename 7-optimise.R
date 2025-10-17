@@ -5,14 +5,16 @@ library(lubridate)
 library(here)
 library(doParallel)
 
-rst.per <- raster(here("models", "perenialVeg", "rem_Woody_veg_2020.tif"))
+dir2 <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
+rst.per <- raster(here(dir2,"perenialVeg", "rem_Woody_veg_2020.tif"))
 dir.create(here("bufferStats", "allPre"), showWarnings = FALSE)
 lshp <- list.files(here("inputs\\shpByBurn\\"), pattern = ".shp$", full.names = FALSE)
 
 alb.shp <- list.files(here("inputs\\"), pattern = ".shp$", full.names = TRUE)
 shp <- st_read(alb.shp[1], stringsAsFactors = FALSE, quiet = TRUE)
 #crs(shp)
-dates <- read.csv(here::here("inputs", "request_2024-25.csv")) 
+csvs <- list.files(here::here(), pattern = ".csv")
+dates <- read.csv(here::here(csvs))
 #colnames(dates)[1] <- "BURNID"
 
 dates <- dates %>%
@@ -30,7 +32,7 @@ dates$end <- as.Date(dates$end)
 
 burns <- unique(shp$BURNID)
 burns <- str_split_fixed(lshp, "_", 2)[,1]
-burns <- "DON153"
+#burns <- "DON153"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
@@ -173,13 +175,23 @@ foreach(i = 1:length(burns)) %dopar% {
   }
   }
  df.all$date <- ymd(df.all$date) 
- ggplot(df.all, aes(date, threshold))+
-  geom_point()+
-  geom_line()+
-   labs(title = paste0(burns[i], ": min = ", df.all$date[which(df.all$threshold == min(df.all$threshold))]))+
-   coord_cartesian(ylim = c(0, 0.3))+
-   theme_bw() 
- ggsave(here("bufferStats", "allPre", paste0("allPre_", burns[i], ".jpg")))
+ if (nrow(df.all) !=0){
+  ggplot(df.all, aes(date, threshold))+
+    geom_point()+
+    geom_line()+
+      labs(title = paste0(burns[i], ": min = ", df.all$date[which(df.all$threshold == min(df.all$threshold))]))+
+    coord_cartesian(ylim = c(0, 0.3))+
+    theme_bw() 
+  ggsave(here("bufferStats", "allPre", paste0("allPre_", burns[i], ".jpg")), width = 4, height = 3)
+ }else{
+   ggplot(df.all, aes(date))+
+     geom_histogram()+
+     #geom_line()+
+     labs(title = paste0(burns[i], ": Maybe no post fire image"))+
+     coord_cartesian(ylim = c(0, 0.3))+
+     theme_bw() 
+   ggsave(here("bufferStats", "allPre", paste0("allPre_", burns[i], ".jpg")), width = 3, height = 3)
+ }
 }
 stopCluster(cl)
 

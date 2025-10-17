@@ -10,7 +10,8 @@ post.days <- 200 # number of days following to end date included
 yr <- 2024
 
 #change csv name
-toCk <-  read.csv(here("inputs", "burn severity request_2025Jan_June.csv")) %>%
+csvs <- list.files(here::here(), pattern = ".csv")
+toCk <-  read.csv(here(csvs)) %>%
   dplyr::select(BURNID, start, end, mapText, nSeason, Comment) %>%
   mutate(start = dmy(start), end = dmy(end), 
          BURNID = str_replace(BURNID, "_", ""))
@@ -77,7 +78,7 @@ dir.create(here("inputs"), showWarnings = FALSE)
 
 v <- length(list.files(here("inputs"), pattern = "shp$"))
 shp.albF <- shp.alb %>% mutate(days = floor(difftime( im_end, im_strt, units = "days"))) %>%
-  filter(days >= 8 & mapText != "" ) 
+  filter(days >= 30 & mapText != "" ) 
 
 #shp.albF <- filter(shp.albF, BURNID %in% c("DON147", "DON157", "FRK107", "DON106"))
 st_write(shp.albF, here("inputs", paste0("operational_", Sys.Date(), "_alb.shp")), append=FALSE)
@@ -99,6 +100,7 @@ for (i in 1:nrow(shp.alb)){
 # get ibras
 dir <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
 ibra <- st_read(here(dir,"IBRA_wa.shp"), quiet = TRUE) 
+dir.create(here::here("models"), showWarnings = FALSE)
 dir.create(here::here("models", "ibras"), showWarnings = FALSE)
 library(doParallel)
 i <- 1
@@ -130,76 +132,18 @@ stopCluster(cl)
 #ONLY RUN when a boundarie needs to be updated 
 ### update shpByBurn
  # 
-  shp.new <- st_read(here("inputs", "MOR_057", "Cell 6 Burn.shp"))
-  shp.new <- shp.new %>% mutate(BURNID = "MOR057") %>%
-    dplyr::select(-id) %>%
-    st_transform(crs = "EPSG:3577")
+ #  shp.new <- st_read(here("inputs", "SeverityRequest_treatment_areas_Sep2025.shp"))
+ #  shp.new <- shp.new %>% mutate(BURNID = str_replace(NUMBER, "_", "")) %>%
+ #    dplyr::select(BURNID) %>%
+ #    st_transform(crs = "EPSG:3577")
+ # 
+ #  plot(shp.new[,1])
+ #  i <- 1
+ # for (i in 1:nrow(shp.new)){
+ #    ply <- shp.new[i,]
+ #    plot(ply)
+ #    st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
+ #             delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
+ # }
 
-  plot(shp.new[,1])
-  i <- 1
- for (i in 1:nrow(shp.new)){
-    ply <- shp.new[i,]
-    plot(ply)
-    st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
-             delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
- }
 
-###################################################
-  
-  shp.new <- st_read(here("inputs", "Swan Region Burn Severity submission December 2024", 
-                          "Swan Region Burn Severity submission December 2024 (1).shp"))
-  shp.new <- shp.new %>% mutate(BURNID = "PHS125") %>%
-    dplyr::select(-id) %>%
-    st_transform(crs = "EPSG:3577")
-  
-  plot(shp.new[,1])
-  i <- 1
-  for (i in 1:nrow(shp.new)){
-    ply <- shp.new[i,]
-    plot(ply)
-    st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
-             delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
-  }
-
-  ###################################################
-  
-  shp.new <- st_read(here("inputs", "SW_Burn_shapes_Severity", 
-                          "Severity.shp"))
-  shp.new$BURNID <- paste0(c("DON", "DON","DON","FRK","FRK"), shp.new$id)
-  shp.new <- shp.new %>% dplyr::select(BURNID) %>%
-    st_transform(crs = "EPSG:3577")
-  
-  plot(shp.new[1,1])
-  i <- 1
-  for (i in 1:nrow(shp.new)){
-    ply <- shp.new[i,]
-    plot(ply)
-    st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
-             delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
-  }
-
-# shp.new <- st_read(here("inputs", "WARREN_AFED_2022_23_Treatment_Areas", "WARREN_AFED_2022_23_Treatment_Areas.shp"))
-# shp.new <- shp.new %>% mutate(BURNID = paste0(DISTRICT, NUMBER)) %>%
-#   filter(YEAR1 == 2023 & BURNID %in% shp.alb$BURNID) %>%
-#   dplyr::select(BURNID)%>%
-#   st_transform(crs = "EPSG:3577")
-# 
-# plot(shp.new[,1])
-# i <- 1
-# for (i in 1:nrow(shp.new)){
-#   ply <- shp.new[i,]
-#   plot(ply)
-#   st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
-#            delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
-# }
-
-# alb.id <- shp.alb %>% st_drop_geometry() %>%
-#   dplyr::select(BURNID, id)
-# # create directory for inputs
-# shps <- list.files(here("inputs", "shpByBurn"), pattern = "shp$")
-# i <- 1
-# for (i in 1:length(shps)){
-#   shp <- st_read(here("inputs", "shpByBurn", shps[i]))
-#   shp <- left_join(shp, alb.id, by = "BURNID")
-#   st_write(shp, here("inputs", "shpByBurn", shps[i]), append=FALSE)
-# }

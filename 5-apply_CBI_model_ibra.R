@@ -87,7 +87,7 @@ tlist <- tlist %>% mutate(tif = str_split_fixed(loc, "dNBR/", 2)[,2]) %>%
 burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
-#burns <- "PHS231"
+burns <- "PHS252"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
