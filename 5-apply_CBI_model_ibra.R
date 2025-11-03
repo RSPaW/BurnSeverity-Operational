@@ -87,7 +87,7 @@ tlist <- tlist %>% mutate(tif = str_split_fixed(loc, "dNBR/", 2)[,2]) %>%
 burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
-burns <- "PHS252"
+#burns <- "PHS252"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
@@ -212,12 +212,20 @@ foreach(i = 1:length(burns)) %dopar% {
       df.freq$index <- mod.index
       df.freq$date <- Sys.Date()
       df.freq$Master_Key <- ply$id[1]
+      if (file.exists(here(v,  "severity_stats", paste0("\\FireSevStat_",  
+                                                        burn.ibra,"_",  burns[i], "_", 
+                                                        ibra.model$type[m], "_s2a_",
+                                                        mod.index, ".csv")))){
+        file.remove(here(v,  "severity_stats", paste0("\\FireSevStat_",  
+                                                      burn.ibra,"_",  burns[i], "_", 
+                                                      ibra.model$type[m], "_s2a_",
+                                                      mod.index, ".csv")))
+      }
       write_csv(df.freq, here(v,  "severity_stats", paste0("\\FireSevStat_",  
                                 burn.ibra,"_",  burns[i], "_", 
                                 ibra.model$type[m], "_s2a_",
                                 mod.index, ".csv")))
-      ###
-      
+    
       
       writeRaster(rst.p, here::here(v, "severity_geoTifs", paste0("BurnSeverity_", burns[i], "_", str_replace(v, "v", ""), ".tif")), overwrite=TRUE)
     
