@@ -16,7 +16,7 @@ dates <- read.csv(here::here(csvs))
 colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
   mutate(
-    BURNID = str_replace(BURNID, "_", ""),
+    BURNID = str_trim(str_replace(BURNID, "_", "")),
     start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
     end = as.Date(parse_date_time(end, c("ymd", "dmy")))
   )
@@ -26,7 +26,7 @@ burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
 burns <- unique(dates$BURNID)
-burns <- "PHS252"
+burns <-  "PHS252"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
