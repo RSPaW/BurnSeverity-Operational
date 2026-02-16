@@ -38,11 +38,12 @@ df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","War
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
 
 csvs <- list.files(here::here(), pattern = ".csv")
+csvs <- csvs[csvs != "allDates.csv"]
 dates <- read.csv(here::here(csvs)) 
 colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
   mutate(
-    BURNID = str_replace(BURNID, "_", ""),
+    BURNID = str_trim(str_replace(BURNID, "_", "")),
     start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
     end = as.Date(parse_date_time(end, c("ymd", "dmy")))
   )
@@ -62,11 +63,10 @@ burns <- str_split_fixed(burns.f, "_", 2)[,2]
 
 burns <- unique(tlist$BURNID)
 #burns <- "DON152"
-burns <- "PHS252"
-
+burns <-  "FRK112"
 
 rst.per <- raster(here(dir2,"perenialVeg", "rem_Woody_veg_2020.tif"))
-i <- 1
+i <- 6
 
 dir.create(here("models", "tmp"), showWarnings = FALSE)
 
