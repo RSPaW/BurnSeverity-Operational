@@ -5,21 +5,22 @@ library(lubridate) # date manipulation
 library(here) # reference data locations
 
 
-#pre.days <- 250 # number of days prior to start date included
+pre.days <- 365 # number of days prior to start date included
 post.days <- 200 # number of days following to end date included
-yr <- 2024
+yr <- 2025
 
 #change csv name
 csvs <- list.files(here::here(), pattern = ".csv")
+csvs <- csvs[csvs != "allDates.csv"]
 toCk <-  read.csv(here(csvs)) %>%
   dplyr::select(BURNID, start, end, mapText, nSeason, Comment) %>%
   mutate(start = dmy(start), end = dmy(end), 
-         BURNID = str_replace(BURNID, "_", ""))
+         BURNID = str_replace(str_replace(BURNID, "_", ""), " ", ""))
 
 shp <- st_read("V:\\GIS1-Corporate\\data\\GDB\\Fire\\Burn_data\\CPT_FIRE_ANNUAL_IBP.gdb", 
                layer = "CPT_FIRE_ANNUAL_IBP", quiet = TRUE) %>%
   st_make_valid() %>%
-  mutate(BURNID = str_replace(BURNID, "_", ""), 
+  mutate(BURNID = str_replace(str_replace(BURNID, "_", ""), " ", ""), 
          DISTRICT = str_sub(BURNID, end = 3)) %>%
   filter(BURNID %in% toCk$BURNID)
 plot(shp[,3])
@@ -46,7 +47,7 @@ shp.alb <- shp %>% left_join(toCk, by = "BURNID") %>%
 
 shp.alb$end[is.na(shp.alb$end)] <- Sys.Date()
 
-shp.alb <- mutate(shp.alb, im_strt = floor_date(start, "years"), 
+shp.alb <- mutate(shp.alb, im_strt = start - pre.days, 
                   im_end = case_when(end + days(post.days) > Sys.Date() ~ floor_date(Sys.Date(), "day"), 
                                      TRUE ~ end + days(post.days)))
 
@@ -78,9 +79,10 @@ dir.create(here("inputs"), showWarnings = FALSE)
 
 v <- length(list.files(here("inputs"), pattern = "shp$"))
 shp.albF <- shp.alb %>% mutate(days = floor(difftime( im_end, im_strt, units = "days"))) %>%
-  filter(days >= 30 & mapText != "" ) 
+  filter(days >= 7)# & mapText != "" ) 
 
-#shp.albF <- filter(shp.albF, BURNID %in% c("DON147", "DON157", "FRK107", "DON106"))
+ shp.albF <- filter(shp.albF, BURNID %in% c("FRK112"))
+
 st_write(shp.albF, here("inputs", paste0("operational_", Sys.Date(), "_alb.shp")), append=FALSE)
 
 #####################################################################
@@ -131,19 +133,31 @@ stopCluster(cl)
 #################################################################
 #ONLY RUN when a boundarie needs to be updated 
 ### update shpByBurn
- # 
- #  shp.new <- st_read(here("inputs", "SeverityRequest_treatment_areas_Sep2025.shp"))
- #  shp.new <- shp.new %>% mutate(BURNID = str_replace(NUMBER, "_", "")) %>%
- #    dplyr::select(BURNID) %>%
- #    st_transform(crs = "EPSG:3577")
- # 
- #  plot(shp.new[,1])
- #  i <- 1
- # for (i in 1:nrow(shp.new)){
- #    ply <- shp.new[i,]
- #    plot(ply)
- #    st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
- #             delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
- # }
 
+  shp.new <- st_read(here("inputs", "December", "Swan Region Burn Severity December 2025 Precribed Burns.shp"))
+  shp.new <- shp.new %>% mutate(BURNID = str_replace(NUMBER, "_", "")) %>%
+    dplyr::select(BURNID) %>%
+    st_transform(crs = "EPSG:3577")
 
+  plot(shp.new[,1])
+  i <- 1
+ for (i in 1:nrow(shp.new)){
+    ply <- shp.new[i,]
+    plot(ply)
+    st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
+             delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
+ }
+
+ply <- st_read(here("inputs", "November requests", "Glenlynn.shp")) %>%
+  mutate(BURNID = paste0(DISTRICT, NUMBER)) %>%
+  dplyr::select(BURNID) %>%
+st_transform(crs = "EPSG:3577")
+st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
+         delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
+
+ply <- st_read(here("inputs", "November requests", "Kingston.shp")) %>%
+  mutate(BURNID = paste0(DISTRICT, NUMBER)) %>%
+  dplyr::select(BURNID) %>%
+st_transform(crs = "EPSG:3577")
+st_write(ply, here::here("inputs", "shpByBurn", paste0(ply$BURNID[1], "_boundry.shp")),
+         delete_dsn=TRUE, showWarnings = FALSE, quiet = TRUE)
