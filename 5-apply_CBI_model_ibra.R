@@ -56,13 +56,14 @@ heath.list <- sort(list.files("Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\D
                               pattern = "predicted.*.shp$", full.names = TRUE), 
                    decreasing = TRUE)
 
-heath.list2 <- list.files(here(dir2, "heath"), pattern = "shp$")
+heath.list2 <- list.files("Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\heath\\heathFromDistricts", 
+                          pattern = "shp$", full.names = TRUE)
 heath <- st_read(heath.list[1], quiet = TRUE) %>%
   st_transform(crs(shp))
 heath <- heath[,0]
 i <- 1
 for (i in 1:length(heath.list2)){
-  heath.i <- st_read(here(dir2, "heath", heath.list2[i]), quiet = TRUE) %>%
+  heath.i <- st_read( heath.list2[i], quiet = TRUE) %>%
     st_transform(crs(shp))
   heath.i <- heath.i[,0]
   heath <- rbind(heath, heath.i)
@@ -87,7 +88,7 @@ tlist <- tlist %>% mutate(tif = str_split_fixed(loc, "dNBR/", 2)[,2]) %>%
 burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
-#burns <- "PHS252"
+#burns <-  "BWD159"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
