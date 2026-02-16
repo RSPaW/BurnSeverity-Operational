@@ -8,9 +8,10 @@ library(here)
 
 use.heath <- "y"
 
-dates <- read.csv(here::here("inputs", "burn severity request_2025Jan_June.csv")) 
+csvs <- list.files(here::here(), pattern = ".csv")
+dates <- read.csv(here::here(csvs)) 
 colnames(dates)[1] <- "BURNID"
-dates <- dates %>% mutate(BURNID = str_replace(BURNID, "_", "")) %>%
+dates <- dates %>% mutate(BURNID = str_trim(str_replace(BURNID, "_", ""))) %>%
   mutate(pageNumber = paste0(BURNID, "_", burnName)) %>%
   dplyr::select(BURNID, burnName, pageNumber, mapText)
 
@@ -23,7 +24,7 @@ dates$pageNumber <- str_replace_all(dates$pageNumber, "\\(", "-")
 dates$pageNumber <- str_replace_all(dates$pageNumber, "\\)", "")
 dates$pageNumber <- str_replace_all(dates$pageNumber, "\\/", "-")
 
-#dates$pageNumber
+dates$pageNumber
 
 dir.create(here("maps"), showWarnings = FALSE)
 
@@ -166,3 +167,4 @@ if (use.heath == "y"){
   }else{
   writeRaster(ouput.rst, here("maps", paste0(folder.name, "_noHeath_", Sys.Date(), ".tif")), format='GTiff', overwrite=TRUE)
 }
+
