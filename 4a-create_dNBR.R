@@ -12,6 +12,7 @@ df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","War
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
 #change csv name
 csvs <- list.files(here::here(), pattern = ".csv")
+csvs <- csvs[csvs != "allDates.csv"]
 dates <- read.csv(here::here(csvs)) 
 colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
@@ -26,7 +27,7 @@ burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
 burns <- unique(dates$BURNID)
-#burns <-  "PHS252"
+burns <-  "FRK112"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
