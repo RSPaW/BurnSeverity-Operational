@@ -7,7 +7,7 @@ library(parsedate)
 
 unlink(here("tmp2"), recursive = TRUE)
 
-tarfile <- here("s2_rgb_nbr (1).tar.gz")
+tarfile <- here("s2_rgb_nbr.tar.gz")
 untar(tarfile, exdir = here("tmp2"))
 
 plst <- list.files(here("tmp2\\home\\jovyan\\fireSeverity\\rgb_nbr"), pattern = ".png$" )
@@ -15,6 +15,7 @@ tlst <- list.files(here("tmp2\\home\\jovyan\\fireSeverity\\rgb_nbr"), pattern = 
 
 #change csv name
 csvs <- list.files(here::here(), pattern = ".csv")
+csvs <- csvs[csvs != "allDates.csv"]
 dates <- read.csv(here::here(csvs)) 
 colnames(dates)[1] <- "BURNID" 
   
