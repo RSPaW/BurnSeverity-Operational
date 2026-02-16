@@ -14,12 +14,13 @@ alb.shp <- list.files(here("inputs\\"), pattern = ".shp$", full.names = TRUE)
 shp <- st_read(alb.shp[1], stringsAsFactors = FALSE, quiet = TRUE)
 #crs(shp)
 csvs <- list.files(here::here(), pattern = ".csv")
+csvs <- csvs[csvs != "allDates.csv"]
 dates <- read.csv(here::here(csvs))
 #colnames(dates)[1] <- "BURNID"
 
 dates <- dates %>%
   mutate(
-    BURNID = str_replace(BURNID, "_", ""),
+    BURNID = str_trim(str_replace(BURNID, "_", "")),
     start = parse_date_time(start, c("ymd", "dmy")),
     end = parse_date_time(end, c("ymd", "dmy"))
   )
@@ -28,15 +29,13 @@ dates <- dates %>%
 dates$start <- as.Date(dates$start)
 dates$end <- as.Date(dates$end)
 
-
-
 burns <- unique(shp$BURNID)
 burns <- str_split_fixed(lshp, "_", 2)[,1]
-#burns <- "DON153"
+burns <- "FRK112"
 
-i <- 1
+i <- 2
 #Define how many cores (memory is limiting factor here)
-UseCores <- 10
+UseCores <- 5
 #Register CoreCluster
 cl <- makeCluster(UseCores)
 registerDoParallel(cl)
@@ -71,7 +70,7 @@ foreach(i = 1:length(burns)) %dopar% {
     plist <- mutate(plist, date = ymd(str_split_fixed(file, "_", 3)[,2]))
     date.list <- plist$date
     
-    tlist <- as.data.frame(list.files(here("tifs", burns[i])))
+    tlist <- as.data.frame(list.files(here("tifs", burns[i]), pattern = "tif$"))
     colnames(tlist)[1] <- "file" 
     tlist <- tlist %>% mutate(date = ymd(str_split_fixed(file, "_", 3)[,2])) %>%
       filter(date %in% date.list)
