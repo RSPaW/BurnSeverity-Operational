@@ -19,7 +19,7 @@ csvs <- csvs[csvs != "allDates.csv"]
 dates <- read.csv(here::here(csvs)) 
 colnames(dates)[1] <- "BURNID" 
   
-dates<-   mutate(dates, BURNID = str_replace(BURNID, "_", "")) %>%
+dates<-   mutate(dates, BURNID = str_trim(str_replace(BURNID, "_", ""))) %>%
   dplyr::select(BURNID, start, end)
 dates$start <- parse_date_time(dates$start, c("ymd", "dmy"))
 dates$end <- parse_date_time(dates$end, c("ymd", "dmy"))
