@@ -68,26 +68,26 @@ i <- 1
     st_transform(crs = st_crs(shp))
   shp <- rbind(shp, shpi)
 
-  shps <- list.files(paste0(fold2, "/actual_burnt"), pattern = "shp$", full.names = TRUE)
-  j <- 1
-  for(j in 1:length(shps)){
-    #shp.j <- st_read(shps[j], quiet = TRUE) 
-   
-    
-    shp.j <- st_read(shps[j], quiet = TRUE)
-    
-    shp.m <- st_cast(shp.j, "POLYGON")
-    shp.m$area <- as.numeric(st_area(shp.m))
-    shp.m <- filter(shp.m, area > 500)
-    #plot(shp.m[,1])
-    shp.s <- shp.m %>% group_by(NUMBER) %>%
-      summarise()%>%
-      st_cast("MULTIPOLYGON")
-    shp.s <- left_join(shp.s, st_drop_geometry(shp.j[1,]),  by = "NUMBER") 
-    shp.s <-  st_transform(shp.s, crs = st_crs(burnt.shp))
-    
-     burnt.shp <- rbind(burnt.shp, shp.s)
-  }
+  # shps <- list.files(paste0(fold2, "/actual_burnt"), pattern = "shp$", full.names = TRUE)
+  # j <- 1
+  # for(j in 1:length(shps)){
+  #   #shp.j <- st_read(shps[j], quiet = TRUE) 
+  #  
+  #   
+  #   shp.j <- st_read(shps[j], quiet = TRUE)
+  #   
+  #   shp.m <- st_cast(shp.j, "POLYGON")
+  #   shp.m$area <- as.numeric(st_area(shp.m))
+  #   shp.m <- filter(shp.m, area > 500)
+  #   #plot(shp.m[,1])
+  #   shp.s <- shp.m %>% group_by(NUMBER) %>%
+  #     summarise()%>%
+  #     st_cast("MULTIPOLYGON")
+  #   shp.s <- left_join(shp.s, st_drop_geometry(shp.j[1,]),  by = "NUMBER") 
+  #   shp.s <-  st_transform(shp.s, crs = st_crs(burnt.shp))
+  #   
+  #    burnt.shp <- rbind(burnt.shp, shp.s)
+  # }
   
 plot(shp[,2])
 plot(burnt.shp[,2])
@@ -103,7 +103,7 @@ df.txt <- shpj %>% st_drop_geometry() %>%
 #shp.m <- st_read(list.files(here("multiSeason", "treatment_area"), full.names = TRUE, pattern = "shp$") )
 
 shpf <- shpj %>% dplyr::select(BURNID, X1, X2, X3, X4, X5, X6, date) %>%
-  filter((BURNID %in% shp.m$BURNID) == FALSE) %>%
+  #filter((BURNID %in% shp.m$BURNID) == FALSE) %>%
   #rbind(st_transform(shp.m, crs = crs(shp))) %>%
   left_join(df.txt, by = "BURNID") %>%
   mutate(date = ymd(date))
@@ -140,8 +140,8 @@ shpf <- left_join(shpf, imgUsed, by = "BURNID")
   #   }
   # }
 #}
-dir.create(here("burntArea"), showWarnings = FALSE)
-st_write(burnt.shp, here("burntArea", paste0(folder.name, "_burntArea_", Sys.Date(), ".shp")), append=FALSE)
+#dir.create(here("burntArea"), showWarnings = FALSE)
+#st_write(burnt.shp, here("burntArea", paste0(folder.name, "_burntArea_", Sys.Date(), ".shp")), append=FALSE)
 
 shpf <- st_make_valid(shpf)
 shpf$Hectares <- round(as.numeric(st_area(shpf))/10000, 0)
