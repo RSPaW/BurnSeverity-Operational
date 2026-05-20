@@ -306,27 +306,49 @@ ggplot(dfg, aes(class, perc)) +
 ggsave(here(v, "severity_stats", "summaryStats.jpg"), width = 5, height = 5)
 
 ##############################################################
+dates <- read.csv(here("inputs", "clean_dates.csv"))
 
 dir.create(here(v, "treatment_area"), showWarnings = FALSE)
-shp.list <- list.files(here(v, "actual_burnt"), pattern = "shp$")
-shp.treat <- st_read(here(v, "actual_burnt", shp.list[1]), quiet = TRUE) %>%
+shp.list <- list.files(here("inputs", "shpByBurn"), pattern = "shp$")
+shp.treat <- st_read(here("inputs", "shpByBurn", shp.list[1]), quiet = TRUE) %>%
   st_drop_geometry()
 shp.treat <- shp.treat[0,]
 i <- 1
 for(i in 1:length(shp.list)){
-  shpi <- st_read(here( v, "actual_burnt", shp.list[i]), quiet = TRUE) %>%
-    st_drop_geometry()
-  shp.treat <- bind_rows(shp.treat, shpi)
+  shpi <- st_read(here("inputs", "shpByBurn", shp.list[i]), quiet = TRUE) %>%
+    dplyr::select(BURNID)
+  shp.treat <- rbind(shp.treat, shpi)
 }
 
-shp.treat$BURNID <- str_replace(shp.treat$NUMBER, "_", "")
-shp.treat <- left_join(shp.treat, dplyr::select(shp, BURNID), by = "BURNID")
-shp.treat <- st_sf(shp.treat)
+shp.treat$NUMBER <- paste0(str_sub(shp.treat$BURNID, end = 3), "_", 
+                           str_sub(shp.treat$BURNID, start = 4))
+shp.treat$DISTRICT <- str_sub(shp.treat$BURNID, end = 3)
+# shp.treat$DATE1 <- as.Date(parse_date_time(dates$start[which(dates$BURNID == burns[i])], 
+#                                            c("ymd", "dmy")))
 
-shp.treat$Hectares <-  round(as.numeric(st_area(shp.treat))/10000, 2)
-shp.treat$Perimeter <- as.numeric(st_perimeter(shp.treat)/1000)
-plot(shp[,1])
-shape.name <- str_split_fixed(lshp, "clean_", 2)[,2]
+shp.treat <- left_join(shp.treat, dplyr::select(dates, BURNID, start), by = "BURNID")
+shp.treat <- rename(shp.treat, DATE1 = start)
+shp.treat$CAPT_METH <- "RS20"
+shp.treat$AUTHOR <- "automated"
+shp.treat$Hectares <- round(as.numeric(st_area(shp.treat))/10000, 2)
+shp.treat$Perimeter <- as.numeric(sf::st_perimeter(st_transform(shp.treat, crs = crs(shp)))/1000)
+shp.treat$YEAR1 <- year(shp.treat$DATE1)
+shp.treat$POLY_TYPE <- "Actual Burnt"
+
+shp.treat$SEASON1 <- case_when(yday(shp.treat$DATE1[1]) <= 79 ~ "SU", 
+                               yday(shp.treat$DATE1[1]) <= 171 ~ "AU",
+                               yday(shp.treat$DATE1[1]) <= 263 ~ "WI", 
+                               TRUE ~ "SP")
+
+shp.treat$FIRE_SEASO <- case_when(month(shp.treat$DATE1[1]) <= 6 ~ 
+                                    paste0(year(shp.treat$DATE1[1])-1, "/", 
+                                           year(shp.treat$DATE1[1])), 
+                                  TRUE ~ paste0(year(shp.treat$DATE1[1]), "/", 
+                                                year(shp.treat$DATE1[1])+1))
+
+shp.treat <- rename(shp.treat, Master_Key = id)
+
+#shape.name <- str_split_fixed(lshp, "clean_", 2)[,2]
 dir.create(here(v, "treatment_area"), showWarnings = FALSE)
 f.name <- str_split_fixed(here(), "Operational/", 2)[,2]
 st_write(shp.treat, here(v, "treatment_area", paste0(f.name, "_treatment_AFED.shp")), append=FALSE)
@@ -336,7 +358,39 @@ shp.map <- left_join(shp.treat, df, by = "BURNID")
 #shp.map <- st_cast(shp.map, "POLYGON")
 
 st_write(shp.map, here(v, "treatment_area", paste0(f.name, "_treatment_forMap.shp")) , append=FALSE)
-#plot(shp.map[,1])
 }
+##############################################################
+# dir.create(here(v, "treatment_area"), showWarnings = FALSE)
+# shp.list <- list.files(here(v, "actual_burnt"), pattern = "shp$")
+# shp.treat <- st_read(here(v, "actual_burnt", shp.list[1]), quiet = TRUE) %>%
+#   st_drop_geometry()
+# shp.treat <- shp.treat[0,]
+# i <- 1
+# for(i in 1:length(shp.list)){
+#   shpi <- st_read(here( v, "actual_burnt", shp.list[i]), quiet = TRUE) %>%
+#     st_drop_geometry()
+#   shp.treat <- bind_rows(shp.treat, shpi)
+# }
+# 
+# shp.treat$BURNID <- str_replace(shp.treat$NUMBER, "_", "")
+# shp.treat <- left_join(shp.treat, dplyr::select(shp, BURNID), by = "BURNID")
+# shp.treat <- st_sf(shp.treat)
+# 
+# shp.treat$Hectares <-  round(as.numeric(st_area(shp.treat))/10000, 2)
+# shp.treat$Perimeter <- as.numeric(st_perimeter(shp.treat)/1000)
+# plot(shp[,1])
+# 
+# shape.name <- str_split_fixed(lshp, "clean_", 2)[,2]
+# dir.create(here(v, "treatment_area"), showWarnings = FALSE)
+# f.name <- str_split_fixed(here(), "Operational/", 2)[,2]
+# st_write(shp.treat, here(v, "treatment_area", paste0(f.name, "_treatment_AFED.shp")), append=FALSE)
+# 
+# 
+# shp.map <- left_join(shp.treat, df, by = "BURNID")
+# #shp.map <- st_cast(shp.map, "POLYGON")
+# 
+# st_write(shp.map, here(v, "treatment_area", paste0(f.name, "_treatment_forMap.shp")) , append=FALSE)
+# #plot(shp.map[,1])
+# }
 
 
