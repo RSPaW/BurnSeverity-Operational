@@ -63,7 +63,7 @@ burns <- str_split_fixed(burns.f, "_", 2)[,2]
 
 burns <- unique(tlist$BURNID)
 #burns <- "DON152"
-burns <-  "FRK112"
+#burns <-  "FRK112"
 
 rst.per <- raster(here(dir2,"perenialVeg", "rem_Woody_veg_2020.tif"))
 i <- 6
@@ -190,29 +190,30 @@ foreach(i = 1:length(burns)) %dopar% {
   dir.create(here::here(v, "actual_burnt"), showWarnings = FALSE)
   
   writeRaster(unburnt, here(v, "actual_burnt",paste0(burns[i], "_unburnt.tif") ), overwrite=TRUE)
-  if(T){
+  if(F){
     burnt <- dnbr
     plot(burnt)
     burnt[burnt>=threshold] <- 1
     burnt[burnt<threshold] <- NA
     burnt <- mask(burnt, mask = burn.shp)
-    
-    burnt.ply <- st_as_sf(rasterToPolygons(burnt, dissolve = TRUE))[,-1] 
-    
+
+    burnt.ply <- st_as_sf(rasterToPolygons(burnt, dissolve = TRUE))[,-1]
+
     c <-st_crs(burnt.ply)
     if (is.na(c$input)){
       burnt.ply <- st_set_crs(burnt.ply, crs(burnt))
     }
-    
+
     burnt.ply <- st_transform(burnt.ply, crs = crs(shp.tmp))
     
     burnt.ply <- cbind(burnt.ply, st_drop_geometry(shp.tmp))
+    #burnt.ply <-  st_drop_geometry(shp.tmp)
     
     burnt.ply$NUMBER <- paste0(str_sub(burns[i], end = 3), "_", str_sub(burns[i], start = 4))
     burnt.ply$DISTRICT <- str_sub(burns[i], end = 3)
     burnt.ply$DATE1 <- as.Date(parse_date_time(dates$start[which(dates$BURNID == burns[i])], 
                                                c("ymd", "dmy")))
-    burnt.ply$CAPT_METH <- "RS10"
+    burnt.ply$CAPT_METH <- "RS20"
     burnt.ply$AUTHOR <- "automated"
     burnt.ply$Hectares <- round(as.numeric(st_area(burnt.ply))/10000, 2)
     burnt.ply$Perimeter <- as.numeric(st_perimeter(st_transform(burnt.ply, crs = crs(shp)))/1000)
