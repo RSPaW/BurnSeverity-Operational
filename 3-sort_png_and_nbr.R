@@ -7,22 +7,21 @@ library(parsedate)
 
 unlink(here("tmp2"), recursive = TRUE)
 
-tarfile <- here("s2_rgb_nbr.tar.gz")
+tarfile <- here("s2_rgb_nbr (4).tar.gz")
 untar(tarfile, exdir = here("tmp2"))
 
 plst <- list.files(here("tmp2\\home\\jovyan\\fireSeverity\\rgb_nbr"), pattern = ".png$" )
 tlst <- list.files(here("tmp2\\home\\jovyan\\fireSeverity\\rgb_nbr"), pattern = ".tif$" )
 
 #change csv name
-csvs <- list.files(here::here(), pattern = ".csv")
-csvs <- csvs[csvs != "allDates.csv"]
-dates <- read.csv(here::here(csvs)) 
-colnames(dates)[1] <- "BURNID" 
-  
-dates<-   mutate(dates, BURNID = str_trim(str_replace(BURNID, "_", ""))) %>%
-  dplyr::select(BURNID, start, end)
-dates$start <- parse_date_time(dates$start, c("ymd", "dmy"))
-dates$end <- parse_date_time(dates$end, c("ymd", "dmy"))
+dates <- read_csv(here::here("inputs", "clean_dates.csv")) 
+#colnames(dates)[1] <- "BURNID"
+# dates <- dates %>%
+#   mutate(
+#     BURNID = str_trim(str_replace(BURNID, "_", "")),
+#     start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
+#     end = as.Date(parse_date_time(end, c("ymd", "dmy")))
+#   )
 
 df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","Warren","Warren"), 
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
@@ -92,6 +91,7 @@ ggsave(here("scene_numbers_pre_cloud_qa.png"))
 # now delete all cloudy .png images
 #################################################
 
-dir.create(here("tarDone"))
-file.move(tarfile, here("tarDone"), overwrite = TRUE)
+file.remove(tarfile)
+# dir.create(here("tarDone"))
+# file.move(tarfile, here("tarDone"), overwrite = TRUE)
 
