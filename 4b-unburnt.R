@@ -10,14 +10,7 @@ library(lwgeom)
 library(here)
 library(doParallel)
 
-use.heath <- "y"
-
-if (use.heath == "y"){
-  v <- paste0("v", Sys.Date())
-}else{
-  v <- paste0("nh", Sys.Date())
-}
-#v <- "v2025-02-03"
+v <- paste0("v", Sys.Date())
 
 lshp <- list.files(here("inputs\\shpByBurn"), pattern = ".shp$", full.names = TRUE)
 shp <- st_read(lshp[1])
@@ -37,16 +30,17 @@ for (i in 1:length(lshp)){
 df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","Warren","Warren"), 
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
 
-csvs <- list.files(here::here(), pattern = ".csv")
-csvs <- csvs[csvs != "allDates.csv"]
-dates <- read.csv(here::here(csvs)) 
-colnames(dates)[1] <- "BURNID"
-dates <- dates %>%
-  mutate(
-    BURNID = str_trim(str_replace(BURNID, "_", "")),
-    start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
-    end = as.Date(parse_date_time(end, c("ymd", "dmy")))
-  )
+#csvs <- list.files(here::here(), pattern = ".csv")
+#csvs <- csvs[csvs != "allDates.csv"]
+dates <- read_csv(here::here("inputs", "clean_dates.csv")) 
+#dates <- read.csv(here::here(csvs)) 
+#colnames(dates)[1] <- "BURNID"
+# dates <- dates %>%
+#   mutate(
+#     BURNID = str_trim(str_replace(BURNID, "_", "")),
+#     start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
+#     end = as.Date(parse_date_time(end, c("ymd", "dmy")))
+#   )
 
 dir2 <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\Operational\\xModels"
 shp.tmp <- st_read(here(dir2,"Template_AFED\\Template_AFED.shp"))
@@ -190,52 +184,52 @@ foreach(i = 1:length(burns)) %dopar% {
   dir.create(here::here(v, "actual_burnt"), showWarnings = FALSE)
   
   writeRaster(unburnt, here(v, "actual_burnt",paste0(burns[i], "_unburnt.tif") ), overwrite=TRUE)
-  if(F){
-    burnt <- dnbr
-    plot(burnt)
-    burnt[burnt>=threshold] <- 1
-    burnt[burnt<threshold] <- NA
-    burnt <- mask(burnt, mask = burn.shp)
-
-    burnt.ply <- st_as_sf(rasterToPolygons(burnt, dissolve = TRUE))[,-1]
-
-    c <-st_crs(burnt.ply)
-    if (is.na(c$input)){
-      burnt.ply <- st_set_crs(burnt.ply, crs(burnt))
-    }
-
-    burnt.ply <- st_transform(burnt.ply, crs = crs(shp.tmp))
-    
-    burnt.ply <- cbind(burnt.ply, st_drop_geometry(shp.tmp))
-    #burnt.ply <-  st_drop_geometry(shp.tmp)
-    
-    burnt.ply$NUMBER <- paste0(str_sub(burns[i], end = 3), "_", str_sub(burns[i], start = 4))
-    burnt.ply$DISTRICT <- str_sub(burns[i], end = 3)
-    burnt.ply$DATE1 <- as.Date(parse_date_time(dates$start[which(dates$BURNID == burns[i])], 
-                                               c("ymd", "dmy")))
-    burnt.ply$CAPT_METH <- "RS20"
-    burnt.ply$AUTHOR <- "automated"
-    burnt.ply$Hectares <- round(as.numeric(st_area(burnt.ply))/10000, 2)
-    burnt.ply$Perimeter <- as.numeric(st_perimeter(st_transform(burnt.ply, crs = crs(shp)))/1000)
-    burnt.ply$YEAR1 <- year(burnt.ply$DATE1)
-    burnt.ply$POLY_TYPE <- "Actual Burnt"
-    burnt.ply$Master_Key <- burn.shp$id[1]
-    
-    burnt.ply$SEASON1 <- case_when(yday(burnt.ply$DATE1[1]) <= 79 ~ "SU", 
-                                   yday(burnt.ply$DATE1[1]) <= 171 ~ "AU",
-                                   yday(burnt.ply$DATE1[1]) <= 263 ~ "WI", 
-                                   TRUE ~ "SP")
-    
-    burnt.ply$FIRE_SEASO <- case_when(month(burnt.ply$DATE1[1]) <= 6 ~ 
-                                        paste0(year(burnt.ply$DATE1[1])-1, "/", 
-                                               year(burnt.ply$DATE1[1])), 
-                                      TRUE ~ paste0(year(burnt.ply$DATE1[1]), "/", 
-                                                    year(burnt.ply$DATE1[1])+1))
-    
-    st_write(burnt.ply, here(v, "actual_burnt",paste0(burns[i], "_burnt_area.shp") ), 
-             append=FALSE, quiet = TRUE)
-  }
-  
+  # if(F){
+  #   burnt <- dnbr
+  #   plot(burnt)
+  #   burnt[burnt>=threshold] <- 1
+  #   burnt[burnt<threshold] <- NA
+  #   burnt <- mask(burnt, mask = burn.shp)
+  # 
+  #   burnt.ply <- st_as_sf(rasterToPolygons(burnt, dissolve = TRUE))[,-1]
+  # 
+  #   c <-st_crs(burnt.ply)
+  #   if (is.na(c$input)){
+  #     burnt.ply <- st_set_crs(burnt.ply, crs(burnt))
+  #   }
+  # 
+  #   burnt.ply <- st_transform(burnt.ply, crs = crs(shp.tmp))
+  #   
+  #   burnt.ply <- cbind(burnt.ply, st_drop_geometry(shp.tmp))
+  #   #burnt.ply <-  st_drop_geometry(shp.tmp)
+  #   
+  #   burnt.ply$NUMBER <- paste0(str_sub(burns[i], end = 3), "_", str_sub(burns[i], start = 4))
+  #   burnt.ply$DISTRICT <- str_sub(burns[i], end = 3)
+  #   burnt.ply$DATE1 <- as.Date(parse_date_time(dates$start[which(dates$BURNID == burns[i])], 
+  #                                              c("ymd", "dmy")))
+  #   burnt.ply$CAPT_METH <- "RS20"
+  #   burnt.ply$AUTHOR <- "automated"
+  #   burnt.ply$Hectares <- round(as.numeric(st_area(burnt.ply))/10000, 2)
+  #   burnt.ply$Perimeter <- as.numeric(st_perimeter(st_transform(burnt.ply, crs = crs(shp)))/1000)
+  #   burnt.ply$YEAR1 <- year(burnt.ply$DATE1)
+  #   burnt.ply$POLY_TYPE <- "Actual Burnt"
+  #   burnt.ply$Master_Key <- burn.shp$id[1]
+  #   
+  #   burnt.ply$SEASON1 <- case_when(yday(burnt.ply$DATE1[1]) <= 79 ~ "SU", 
+  #                                  yday(burnt.ply$DATE1[1]) <= 171 ~ "AU",
+  #                                  yday(burnt.ply$DATE1[1]) <= 263 ~ "WI", 
+  #                                  TRUE ~ "SP")
+  #   
+  #   burnt.ply$FIRE_SEASO <- case_when(month(burnt.ply$DATE1[1]) <= 6 ~ 
+  #                                       paste0(year(burnt.ply$DATE1[1])-1, "/", 
+  #                                              year(burnt.ply$DATE1[1])), 
+  #                                     TRUE ~ paste0(year(burnt.ply$DATE1[1]), "/", 
+  #                                                   year(burnt.ply$DATE1[1])+1))
+  #   
+  #   st_write(burnt.ply, here(v, "actual_burnt",paste0(burns[i], "_burnt_area.shp") ), 
+  #            append=FALSE, quiet = TRUE)
+  # }
+  # 
    
   #cat(i, "of", length(burns), "\n")
   }
@@ -253,5 +247,5 @@ ggplot(ub.stats, aes(BURNID, threshold))+
   coord_flip()+
   ylim(0, 0.35)+
   theme_bw()
-d <- list.files(here("bufferStats"), pattern = "unburnt_dif")
-ggsave(here( "bufferStats", paste0("unburnt_dif_",length(d)+1 , ".jpg")))
+#d <- list.files(here("bufferStats"), pattern = "unburnt_dif")
+ggsave(here( "bufferStats", paste0("unburnt_dif.jpg")))
