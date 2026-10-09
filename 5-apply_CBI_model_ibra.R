@@ -7,13 +7,7 @@ library(here)
 library(lwgeom)
 
 # code includes heath mapping and unburnt correction, rv 21-03-2022
-use.heath <- "y"
-
-if (use.heath == "y"){
-  v <- paste0("v", Sys.Date())
-}else{
-  v <- paste0("nh", Sys.Date())
-}
+v <- paste0("v", Sys.Date())
 #v <- "v2025-02-03"
 
 #mdir <- "Z:\\DEC\\Prescribed_Bushfire_Outcomes_2018-134\\DATA\\Working\\ts.Model\\fireSeverity\\models"
@@ -201,31 +195,31 @@ foreach(i = 1:length(burns)) %dopar% {
       df.freq <- as.data.frame(freq(rst.p)) %>% na.omit()
       df.freq <- mutate(df.freq, perc1 = round((count/sum(count))*100, 2)) %>%
         dplyr::select(-count)
-      
+
       df.freq <- left_join(data.frame(value = seq(1, 6), perc = 0), df.freq, by = "value") %>%
         mutate(perc = perc + perc1) %>%
         dplyr::select(-perc1)
       df.freq$perc[is.na(df.freq$perc)] <- 0
       df.freq$BURNID <- burns[i]
       df.freq <- spread(df.freq, value, perc)
-      
+
       df.freq$model <- ibra.model$type[m]
       df.freq$index <- mod.index
       df.freq$date <- Sys.Date()
       df.freq$Master_Key <- ply$id[1]
-      if (file.exists(here(v,  "severity_stats", paste0("\\FireSevStat_",  
-                                                        burn.ibra,"_",  burns[i], "_", 
+      if (file.exists(here(v,  "severity_stats", paste0("\\FireSevStat_",
+                                                        burn.ibra,"_",  burns[i], "_",
                                                         ibra.model$type[m], "_s2a_",
                                                         mod.index, ".csv")))){
-        file.remove(here(v,  "severity_stats", paste0("\\FireSevStat_",  
-                                                      burn.ibra,"_",  burns[i], "_", 
+        file.remove(here(v,  "severity_stats", paste0("\\FireSevStat_",
+                                                      burn.ibra,"_",  burns[i], "_",
                                                       ibra.model$type[m], "_s2a_",
                                                       mod.index, ".csv")))
       }
-      write_csv(df.freq, here(v,  "severity_stats", paste0("\\FireSevStat_",  
-                                burn.ibra,"_",  burns[i], "_", 
-                                ibra.model$type[m], "_s2a_",
-                                mod.index, ".csv")))
+       write_csv(df.freq, here(v,  "severity_stats", paste0("\\FireSevStat_",  
+                                 burn.ibra,"_",  burns[i], "_", 
+                                 ibra.model$type[m], "_s2a_",
+                                 mod.index, ".csv")))
     
       
       writeRaster(rst.p, here::here(v, "severity_geoTifs", paste0("BurnSeverity_", burns[i], "_", str_replace(v, "v", ""), ".tif")), overwrite=TRUE)
@@ -242,49 +236,49 @@ foreach(i = 1:length(burns)) %dopar% {
            sub = paste0("Buffer difference = ", round(ub$threshold, 3), ", ", Sys.Date(),  "\nDeveloped by Densmore and van Dongen (2021)"))
       dev.off()
       
-      freq.df <- as.data.frame(freq(rst.p)) %>% na.omit()
-      freq.df <- mutate(freq.df, Percent = (count/sum(freq.df$count))*100)
+      #freq.df <- as.data.frame(freq(rst.p)) %>% na.omit()
+      #freq.df <- mutate(freq.df, Percent = (count/sum(freq.df$count))*100)
+      # 
+      # ggplot(freq.df, aes(value, Percent))+
+      #   geom_col()+
+      #   geom_text(aes(label=round(Percent, digits = 1)), vjust = -0.2)+
+      #   labs(title = paste0("Percent area per severity class: ",burns[i],  "\nCreated: ", Sys.Date()) 
+      #        , x = "Severity class", y = "Percent of burnt area (%)"
+      #   )+
+      #   theme_bw()
+      # ggsave(here::here(v, "severity_stats", paste0("BurnSeverityGraph_", burns[i], ".jpg")), width = 4, height = 5)
+      # ### metadata
+      #  
+      # library(MESS)
+      # BurnID = burns[i]
+      # Date = as.character(Sys.Date())
+      # Index = "NBR"
+      # Satellite = "Sentinel"
+      # Heath = if(nrow(heath.i)!=0){"Heath mapping included"}else{"Heath mapping not included"}
+      # Severity.Classes <- "####### CBI ########"
+      # Unburnt = paste0("0 to ", rclmat[1,2])
+      # Low = paste0(rclmat[2,1], " to ", rclmat[2,2])
+      # Medium = paste0(rclmat[3,1], " to ", rclmat[3,2])
+      # High = paste0(rclmat[4,1], " to ", rclmat[4,2])
+      # Very.High = paste0(rclmat[5,1], " to 3")
+      # Ibra.model = ibra.model[1,1]
+      # notes = "Developed by Valerie Densmore and Ricky van Dongen, 2021"
+      # 
+      # all.dates <- as.data.frame(str_split_fixed(list.files(here(paste0("all_rgbs/rgb_", burns[i])), "png" ), "_", n=3)[,2])
+      # colnames(all.dates)[1] <- "im.dates"
+      # all.dates$n <- paste0("image-", row.names(all.dates))
+      # all.dates <- spread(all.dates, n, im.dates)
+      # 
+      # #Image.dates <- paste0("from ", all.dates[1,1], " to ", all.dates[, ncol(all.dates)])
+      # 
+      # df <- data.frame(BurnID, Date, Index, Satellite, Image.dates, Heath, 
+      #                  Severity.Classes, Unburnt, Low, Medium, High, Very.High,
+      #                  Ibra.model, notes)
+      # df <- bind_cols(df, all.dates)
       
-      ggplot(freq.df, aes(value, Percent))+
-        geom_col()+
-        geom_text(aes(label=round(Percent, digits = 1)), vjust = -0.2)+
-        labs(title = paste0("Percent area per severity class: ",burns[i],  "\nCreated: ", Sys.Date()) 
-             , x = "Severity class", y = "Percent of burnt area (%)"
-        )+
-        theme_bw()
-      ggsave(here::here(v, "severity_stats", paste0("BurnSeverityGraph_", burns[i], ".jpg")), width = 4, height = 5)
-      ### metadata
-       
-      library(MESS)
-      BurnID = burns[i]
-      Date = as.character(Sys.Date())
-      Index = "NBR"
-      Satellite = "Sentinel"
-      Heath = if(nrow(heath.i)!=0){"Heath mapping included"}else{"Heath mapping not included"}
-      Severity.Classes <- "####### CBI ########"
-      Unburnt = paste0("0 to ", rclmat[1,2])
-      Low = paste0(rclmat[2,1], " to ", rclmat[2,2])
-      Medium = paste0(rclmat[3,1], " to ", rclmat[3,2])
-      High = paste0(rclmat[4,1], " to ", rclmat[4,2])
-      Very.High = paste0(rclmat[5,1], " to 3")
-      Ibra.model = ibra.model[1,1]
-      notes = "Developed by Valerie Densmore and Ricky van Dongen, 2021"
-      
-      all.dates <- as.data.frame(str_split_fixed(list.files(here(paste0("all_rgbs/rgb_", burns[i])), "png" ), "_", n=3)[,2])
-      colnames(all.dates)[1] <- "im.dates"
-      all.dates$n <- paste0("image-", row.names(all.dates))
-      all.dates <- spread(all.dates, n, im.dates)
-      
-      #Image.dates <- paste0("from ", all.dates[1,1], " to ", all.dates[, ncol(all.dates)])
-      
-      df <- data.frame(BurnID, Date, Index, Satellite, Image.dates, Heath, 
-                       Severity.Classes, Unburnt, Low, Medium, High, Very.High,
-                       Ibra.model, notes)
-      df <- bind_cols(df, all.dates)
-      
-      write.xml(df, here(v, "severity_geoTifs", paste0("BurnSeverity_", burns[i], "_", str_replace(v, "v", ""), "_metadata.xml")))
-      write.xml(df, here(v, "severity_maps", paste0("BurnSeverityMap_", burns[i], "_", str_replace(v, "v", ""), "_metadata.xml")))
-      write.xml(df, here(v, "severity_stats", paste0("BurnSeverityGraph_", burns[i], "_", str_replace(v, "v", ""), "_metadata.xml")))
+      #write.xml(df, here(v, "severity_geoTifs", paste0("BurnSeverity_", burns[i], "_", str_replace(v, "v", ""), "_metadata.xml")))
+      #write.xml(df, here(v, "severity_maps", paste0("BurnSeverityMap_", burns[i], "_", str_replace(v, "v", ""), "_metadata.xml")))
+      #write.xml(df, here(v, "severity_stats", paste0("BurnSeverityGraph_", burns[i], "_", str_replace(v, "v", ""), "_metadata.xml")))
       
   #}
   }
@@ -294,19 +288,19 @@ stopCluster(cl)
 
 # summary fire stats
 #v <- paste0("v", Sys.Date())
-df <- lapply(list.files(here(v, "severity_stats"), "FireSevStat", full.names = TRUE), read_csv) %>%
-  bind_rows()
-if (nrow(df!=0)){
-write_csv(df, here(v, "severity_stats", "summaryStats.csv"))
-dfg <- gather(df, class, perc, 2:6)
-ggplot(dfg, aes(class, perc)) +
-  geom_col()+
-  labs(y = "Percent of area (%)", x = "Severity class")+
-  facet_wrap(.~BURNID)
-ggsave(here(v, "severity_stats", "summaryStats.jpg"), width = 5, height = 5)
+ df <- lapply(list.files(here(v, "severity_stats"), "FireSevStat", full.names = TRUE), read_csv) %>%
+   bind_rows()
+#if (nrow(df!=0)){
+ write_csv(df, here(v, "severity_stats", "summaryStats.csv"))
+# dfg <- gather(df, class, perc, 2:6)
+# ggplot(dfg, aes(class, perc)) +
+#   geom_col()+
+#   labs(y = "Percent of area (%)", x = "Severity class")+
+#   facet_wrap(.~BURNID)
+# ggsave(here(v, "severity_stats", "summaryStats.jpg"), width = 5, height = 5)
 
 ##############################################################
-dates <- read.csv(here("inputs", "clean_dates.csv"))
+dates <- read_csv(here("inputs", "clean_dates.csv"))
 
 dir.create(here(v, "treatment_area"), showWarnings = FALSE)
 shp.list <- list.files(here("inputs", "shpByBurn"), pattern = "shp$")
@@ -323,10 +317,8 @@ for(i in 1:length(shp.list)){
 shp.treat$NUMBER <- paste0(str_sub(shp.treat$BURNID, end = 3), "_", 
                            str_sub(shp.treat$BURNID, start = 4))
 shp.treat$DISTRICT <- str_sub(shp.treat$BURNID, end = 3)
-# shp.treat$DATE1 <- as.Date(parse_date_time(dates$start[which(dates$BURNID == burns[i])], 
-#                                            c("ymd", "dmy")))
 
-shp.treat <- left_join(shp.treat, dplyr::select(dates, BURNID, start), by = "BURNID")
+shp.treat <- left_join(shp.treat, dplyr::select(dates, BURNID, start, id), by = "BURNID")
 shp.treat <- rename(shp.treat, DATE1 = start)
 shp.treat$CAPT_METH <- "RS20"
 shp.treat$AUTHOR <- "automated"
@@ -339,7 +331,7 @@ shp.treat$SEASON1 <- case_when(yday(shp.treat$DATE1[1]) <= 79 ~ "SU",
                                yday(shp.treat$DATE1[1]) <= 171 ~ "AU",
                                yday(shp.treat$DATE1[1]) <= 263 ~ "WI", 
                                TRUE ~ "SP")
-
+shp.treat$DATE1 <- parse_date_time(shp.treat$DATE1, c("ymd", "dmy"))
 shp.treat$FIRE_SEASO <- case_when(month(shp.treat$DATE1[1]) <= 6 ~ 
                                     paste0(year(shp.treat$DATE1[1])-1, "/", 
                                            year(shp.treat$DATE1[1])), 
@@ -348,49 +340,12 @@ shp.treat$FIRE_SEASO <- case_when(month(shp.treat$DATE1[1]) <= 6 ~
 
 shp.treat <- rename(shp.treat, Master_Key = id)
 
-#shape.name <- str_split_fixed(lshp, "clean_", 2)[,2]
 dir.create(here(v, "treatment_area"), showWarnings = FALSE)
 f.name <- str_split_fixed(here(), "Operational/", 2)[,2]
 st_write(shp.treat, here(v, "treatment_area", paste0(f.name, "_treatment_AFED.shp")), append=FALSE)
 
-
 shp.map <- left_join(shp.treat, df, by = "BURNID")
-#shp.map <- st_cast(shp.map, "POLYGON")
 
 st_write(shp.map, here(v, "treatment_area", paste0(f.name, "_treatment_forMap.shp")) , append=FALSE)
-}
-##############################################################
-# dir.create(here(v, "treatment_area"), showWarnings = FALSE)
-# shp.list <- list.files(here(v, "actual_burnt"), pattern = "shp$")
-# shp.treat <- st_read(here(v, "actual_burnt", shp.list[1]), quiet = TRUE) %>%
-#   st_drop_geometry()
-# shp.treat <- shp.treat[0,]
-# i <- 1
-# for(i in 1:length(shp.list)){
-#   shpi <- st_read(here( v, "actual_burnt", shp.list[i]), quiet = TRUE) %>%
-#     st_drop_geometry()
-#   shp.treat <- bind_rows(shp.treat, shpi)
-# }
-# 
-# shp.treat$BURNID <- str_replace(shp.treat$NUMBER, "_", "")
-# shp.treat <- left_join(shp.treat, dplyr::select(shp, BURNID), by = "BURNID")
-# shp.treat <- st_sf(shp.treat)
-# 
-# shp.treat$Hectares <-  round(as.numeric(st_area(shp.treat))/10000, 2)
-# shp.treat$Perimeter <- as.numeric(st_perimeter(shp.treat)/1000)
-# plot(shp[,1])
-# 
-# shape.name <- str_split_fixed(lshp, "clean_", 2)[,2]
-# dir.create(here(v, "treatment_area"), showWarnings = FALSE)
-# f.name <- str_split_fixed(here(), "Operational/", 2)[,2]
-# st_write(shp.treat, here(v, "treatment_area", paste0(f.name, "_treatment_AFED.shp")), append=FALSE)
-# 
-# 
-# shp.map <- left_join(shp.treat, df, by = "BURNID")
-# #shp.map <- st_cast(shp.map, "POLYGON")
-# 
-# st_write(shp.map, here(v, "treatment_area", paste0(f.name, "_treatment_forMap.shp")) , append=FALSE)
-# #plot(shp.map[,1])
-# }
-
+#}
 

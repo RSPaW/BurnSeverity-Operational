@@ -13,16 +13,15 @@ lshp <- list.files(here("inputs\\shpByBurn\\"), pattern = ".shp$", full.names = 
 alb.shp <- list.files(here("inputs\\"), pattern = ".shp$", full.names = TRUE)
 shp <- st_read(alb.shp[1], stringsAsFactors = FALSE, quiet = TRUE)
 #crs(shp)
-csvs <- list.files(here::here(), pattern = ".csv")
-csvs <- csvs[csvs != "allDates.csv"]
-dates <- read.csv(here::here(csvs))
-#colnames(dates)[1] <- "BURNID"
 
+dates <- read.csv(here::here("inputs", "clean_dates.csv")) 
+#dates <- read.csv(here::here(csvs)) 
+#colnames(dates)[1] <- "BURNID"
 dates <- dates %>%
   mutate(
     BURNID = str_trim(str_replace(BURNID, "_", "")),
-    start = parse_date_time(start, c("ymd", "dmy")),
-    end = parse_date_time(end, c("ymd", "dmy"))
+    start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
+    end = as.Date(parse_date_time(end, c("ymd", "dmy")))
   )
 
 # Convert parsed dates to Date class
@@ -31,7 +30,7 @@ dates$end <- as.Date(dates$end)
 
 burns <- unique(shp$BURNID)
 burns <- str_split_fixed(lshp, "_", 2)[,1]
-burns <- "FRK112"
+#burns <- "FRK112"
 
 i <- 2
 #Define how many cores (memory is limiting factor here)

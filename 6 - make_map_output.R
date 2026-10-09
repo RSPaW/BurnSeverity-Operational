@@ -6,17 +6,16 @@ library(sf)
 library(lubridate)
 library(here)
 
-use.heath <- "y"
+dates <- read_csv(here::here("inputs", "clean_dates.csv")) 
+#dates <- read.csv(here::here(csvs)) 
+#colnames(dates)[1] <- "BURNID"
 
-csvs <- list.files(here::here(), pattern = ".csv")
-dates <- read.csv(here::here(csvs)) 
-colnames(dates)[1] <- "BURNID"
-dates <- dates %>% mutate(BURNID = str_trim(str_replace(BURNID, "_", ""))) %>%
-  mutate(pageNumber = paste0(BURNID, "_", burnName)) %>%
+dates <- dates %>%  mutate(pageNumber = paste0(BURNID, "_", burnName), 
+                           mapText = "<<DRAFT>>") %>%
   dplyr::select(BURNID, burnName, pageNumber, mapText)
 
-dates <- mutate(dates, pageNumber = case_when(mapText == "<<DRAFT>>" ~ 
-                                                paste0(pageNumber, "_DRAFT"), 
+dates <- mutate(dates, pageNumber = case_when(mapText == "<<DRAFT>>" ~
+                                                paste0(pageNumber, "_DRAFT"),
                                                        TRUE ~ pageNumber))
 
 dates$pageNumber <- str_replace_all(dates$pageNumber, " ", "")
@@ -39,13 +38,10 @@ i <- 1
 # for (i in 1:length(region)){
 #   foldr <- here(region[i])
   fold2 <- list.dirs(here(), recursive = FALSE)
-  if (use.heath == "y"){
+
     fold2 <- fold2[str_detect(fold2, "/v2")]
     vs <- sort(ymd(str_split_fixed(fold2, "/v", 2)[,2]))
-  }else{
-    fold2 <- fold2[str_detect(fold2, "/nh2")]
-    vs <- sort(ymd(str_split_fixed(fold2, "/nh", 2)[,2]))
-  }
+ 
   fold2 <- fold2[str_detect(fold2, as.character(vs[length(vs)]))]
   
   tif.m <- as.data.frame(list.files(here( "multiSeason", "severity_geoTifs"), pattern = "tif$", full.names = TRUE))
@@ -90,7 +86,7 @@ i <- 1
   # }
   
 plot(shp[,2])
-plot(burnt.shp[,2])
+#plot(burnt.shp[,2])
 
 
 
@@ -162,9 +158,8 @@ tif.vrt <-gdalbuildvrt(gdalfile = tifs$file, output.vrt = here("maps", "output.v
 
 ouput.rst<-round(raster::raster(tif.vrt), 0)
 
-if (use.heath == "y"){
+
  writeRaster(ouput.rst, here("maps", paste0(folder.name, "_mosaic_", Sys.Date(), ".tif")), format='GTiff', overwrite=TRUE)
-  }else{
-  writeRaster(ouput.rst, here("maps", paste0(folder.name, "_noHeath_", Sys.Date(), ".tif")), format='GTiff', overwrite=TRUE)
-}
+  
+
 
