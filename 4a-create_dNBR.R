@@ -11,23 +11,24 @@ lshp <- list.files(here("inputs\\shpByBurn"), pattern = ".shp$", full.names = TR
 df.regions <- data.frame(region = c("SouthWest", "SouthWest","Swan", "Swan","Warren","Warren"), 
                          district = c("BWD", "WTN", "SWC", "PHS", "FRK", "DON"))
 #change csv name
-csvs <- list.files(here::here(), pattern = ".csv")
-csvs <- csvs[csvs != "allDates.csv"]
-dates <- read.csv(here::here(csvs)) 
-colnames(dates)[1] <- "BURNID"
-dates <- dates %>%
-  mutate(
-    BURNID = str_trim(str_replace(BURNID, "_", "")),
-    start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
-    end = as.Date(parse_date_time(end, c("ymd", "dmy")))
-  )
-write_csv(dplyr::select(dates, BURNID, start, end), here("inputs", "clean_dates.csv"))
+#csvs <- list.files(here::here(), pattern = ".csv")
+#csvs <- csvs[csvs != "allDates.csv"]
+#dates <- read.csv(here::here(csvs)) 
+
+dates <- read_csv(here::here("inputs", "clean_dates.csv")) 
+#colnames(dates)[1] <- "BURNID"
+# dates <- dates %>%
+#   mutate(
+#     start = as.Date(parse_date_time(start, c("ymd", "dmy"))),
+#     end = as.Date(parse_date_time(end, c("ymd", "dmy")))
+#   )
+#write_csv(dplyr::select(dates, BURNID, start, end), here("inputs", "clean_dates.csv"))
 
 burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
 burns <- unique(dates$BURNID)
-burns <-  "FRK112"
+#burns <-  "FRK112"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
