@@ -28,7 +28,7 @@ burns.f <- list.dirs(here("all_rgbs"), recursive = FALSE, full.names = FALSE)
 burns.f <- burns.f[str_detect(burns.f, "rgb_")]
 burns <- str_split_fixed(burns.f, "_", 2)[,2]
 burns <- unique(dates$BURNID)
-#burns <-  "FRK112"
+#burns <-  "PHS290"
 
 i <- 1
 #Define how many cores (memory is limiting factor here)
